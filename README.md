@@ -5,7 +5,7 @@ Un juego clásico de *snake* en 3D usando Three.js, donde controlas un gusano qu
 ## 🎮 Cómo jugar
 
 - Presiona **espacio** o **toca la pantalla** para iniciar el juego.
-- Usa las teclas de dirección (**flechas** o **WASD**) para mover el gusano.
+- Usa las teclas de dirección (**flechas**) para mover el gusano.
 - En dispositivos táctiles, usa los botones en pantalla para controlar la dirección.
 - Come la comida roja para crecer y sumar puntos.
 - Evita chocarte contra ti mismo o los bordes, o el juego terminará.
