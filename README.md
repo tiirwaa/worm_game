@@ -1,6 +1,7 @@
 # 🐍 AG - Gusano 3D
 
 Un juego clásico de *snake* en 3D usando Three.js, donde controlas un gusano que se mueve por un plano tridimensional. Come la comida para crecer, evita chocarte contra ti mismo o los límites, y desafía tus reflejos en esta divertida experiencia en 3D.
+![Imagen del juego Gusano 3D](./gusano3d.png)
 
 ## 🎮 Cómo jugar
 
