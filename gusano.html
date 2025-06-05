@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gusano 3D</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+    #ui {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-size: 18px;
+    font-family: sans-serif;
+    z-index: 10;
+    }
+
+    #logo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 40px; /* o usa width si prefieres */
+    z-index: 10;
+    }
+
+    #touch-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 20;
+    user-select: none;
+    }
+
+    #touch-controls .up {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    margin: 0px !important;
+    margin-top: 5px !important;
+    }
+
+    #touch-controls .row {
+    display: flex;
+    justify-content: center;
+    margin-top: 60px; /* Ajusta este valor si es necesario */
+    }
+
+    #touch-controls .btn {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    font-size: 24px;
+    background-color: rgba(255,255,255,0.2);
+    border: 1px solid #fff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    }
+
+    #touch-controls .btn:active {
+    background-color: rgba(255,255,255,0.4);
+    }
+
+
+  </style>
+</head>
+<body>
+<div id="ui">Presiona espacio o toca la pantalla para comenzar</div>
+<div id="score">Puntaje: 0</div>
+<img id="logo" src="logo.png" alt="Logo">
+<div id="touch-controls" style="display: none;">
+  <button class="btn up">▲</button>
+  <div class="row">
+    <button class="btn left">◀</button>
+    <button class="btn down">▼</button>
+    <button class="btn right">▶</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.js"></script>
+<script>
+let scene, camera, renderer, clock;
+let eyes = [];
+let pupils = [];
+let snake = [];
+let direction = new THREE.Vector3(1, 0, 0);
+let food;
+let running = false;
+let gameOver = false;
+let moveTimer = 0;
+let moveInterval = 0.15;
+let score = 0;
+let gridSize = 20;
+let plane = null;
+let textureBack = null;
+let snakeGroup;
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const ui = document.getElementById('ui');
+
+init();
+createAnimatedBackground();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111111);
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  /*camera.position.set(gridSize / 2, 25, gridSize * 1.2);
+  camera.lookAt(gridSize / 2, 0, gridSize / 2);*/
+
+  camera.position.set(gridSize / 2, 15, gridSize * 0.6); // Acercar la cámara a la escena
+  camera.lookAt(gridSize / 2, 0, gridSize / 2); // Mantener el enfoque en el centro
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  
+
+  clock = new THREE.Clock();
+
+  // Luz
+  const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  dirLight.position.set(10, 20, 10);
+  scene.add(dirLight);
+
+  // Plano base
+  const grid = new THREE.GridHelper(gridSize, gridSize, 0x888888, 0x444444);
+  grid.position.set(gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5);
+  scene.add(grid);
+
+  // Snake
+  snakeGroup = new THREE.Group();
+  scene.add(snakeGroup);
+
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('touchstart', onTouch);
+  window.addEventListener('resize', onWindowResize);
+
+  if (true) {
+    document.getElementById('touch-controls').style.display = 'block';
+
+    //
+    document.querySelector('#touch-controls .up').addEventListener('click', () => {
+    if (direction.z !== 1) direction.set(0, 0, -1);
+    updateEyeDirection();
+    });
+    document.querySelector('#touch-controls .down').addEventListener('click', () => {
+    if (direction.z !== -1) direction.set(0, 0, 1);
+    updateEyeDirection();
+    });
+    document.querySelector('#touch-controls .left').addEventListener('click', () => {
+    if (direction.x !== 1) direction.set(-1, 0, 0);
+    updateEyeDirection();
+    });
+    document.querySelector('#touch-controls .right').addEventListener('click', () => {
+    if (direction.x !== -1) direction.set(1, 0, 0);
+    updateEyeDirection();
+    });
+  }
+
+  
+  resetGame();
+  //
+  
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onKey(e) {
+  if (e.code === "Space") {
+    if (!running || gameOver) {
+      startGame();
+    }
+  }
+  if (e.key === "ArrowUp" || e.key === "w") if (direction.z !== 1) direction.set(0, 0, -1);
+  if (e.key === "ArrowDown" || e.key === "s") if (direction.z !== -1) direction.set(0, 0, 1);
+  if (e.key === "ArrowLeft" || e.key === "a") if (direction.x !== 1) direction.set(-1, 0, 0);
+  if (e.key === "ArrowRight" || e.key === "d") if (direction.x !== -1) direction.set(1, 0, 0);
+  updateEyeDirection();
+}
+
+function onTouch() {
+  if (!running || gameOver) {
+    startGame();
+  }
+}
+
+function startGame() {
+  resetGame();
+  running = true;
+  ui.style.display = "none";
+}
+
+function resetGame() {
+  snake.forEach(part => snakeGroup.remove(part.mesh));
+  snake = [];
+  direction.set(1, 0, 0);
+  snake.push({ x: 10, z: 10, mesh: createCube(10, 10, true) });
+  moveTimer = 0;
+  gameOver = false;
+  running = false;
+  score = 0;
+  placeFood();
+  ui.innerText = "Presiona espacio o toca la pantalla para comenzar";
+  ui.style.display = "flex";
+}
+
+
+
+
+
+function createAnimatedBackground() {
+  // Crear un canvas para la textura
+  const canvas = document.createElement('canvas');
+  canvas.width = 300; // Ancho de la textura
+  canvas.height = 2000; // Alto de la textura
+  console.log(canvas.width, canvas.height)
+
+  const ctx = canvas.getContext('2d');
+  
+  // Generar un patrón simple de tierra o suelo
+  function generateTexture() {
+    const colors = [
+      '#5c4424',  // marrón
+      '#704c28',  // marrón más claro
+      '#7e593d',  // marrón oscuro
+      '#3e4a2a',  // verde
+    ];
+
+    for (let x = 0; x < canvas.width; x++) {
+      for (let y = 0; y < canvas.height; y++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 1, 1);  // Dibuja un pixel
+      }
+    }
+  }
+
+  generateTexture(); // Generamos el fondo de suelo
+
+  // Crear la textura a partir del canvas
+  const textureBack = new THREE.CanvasTexture(canvas);
+    textureBack.wrapS = THREE.RepeatWrapping;
+    textureBack.wrapT = THREE.RepeatWrapping;
+    textureBack.repeat.set(1, 1); // puedes aumentar para ver más repeticiones
+  
+  // Crear el material usando la textura generada
+  const material = new THREE.MeshStandardMaterial({
+    map: textureBack,
+    side: THREE.DoubleSide,
+  });
+
+  // Crear el plano de fondo
+  const geometry = new THREE.PlaneGeometry(gridSize * 10, gridSize * 10);
+  plane = new THREE.Mesh(geometry, material);
+  material.transparent = true;  // Habilita la transparencia
+  material.opacity = 0.5;       // Establece la opacidad al 50%
+  plane.rotation.x = -Math.PI / 2; // Asegurarse de que esté horizontal
+  //plane.position.set(0, -0.5, 0);
+  plane.position.set(gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5);
+  scene.add(plane);
+}
+
+function updateBackground() {
+  if (!plane || snake.length === 0) return;
+
+  // Fondo se mueve en sentido contrario al gusano
+  const head = snake[0];
+   plane.position.set(
+    -head.x + (gridSize),
+    -0.5,
+    -head.z + (gridSize / 2)
+    );
+
+  // (Opcional) animación de textura
+  if (plane.material.map) {
+    //plane.material.map.offset.y += 0.002;
+    plane.material.map.needsUpdate = true;
+  }
+}
+
+
+
+
+
+function createCube(x, z, isHead = false) {
+  const group = new THREE.Group();
+
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(0.45, 16, 16),
+    new THREE.MeshStandardMaterial({ color: isHead ? 0x00cc00 : 0x00ff00 })
+  );
+  body.position.set(0, 0, 0);
+  group.add(body);
+
+  if (isHead) {
+    const eyeGeo = new THREE.SphereGeometry(0.1, 8, 8);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+    const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+    const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
+
+    const pupilGeo = new THREE.SphereGeometry(0.05, 8, 8);
+    const pupilMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+
+    const pupil1 = new THREE.Mesh(pupilGeo, pupilMat);
+    const pupil2 = new THREE.Mesh(pupilGeo, pupilMat);
+
+    // Posiciones iniciales mirando hacia adelante (Z+)
+    eye1.position.set(0.15, 0.15, 0.4);
+    eye2.position.set(-0.15, 0.15, 0.4);
+    pupil1.position.set(0.15, 0.15, 0.5);
+    pupil2.position.set(-0.15, 0.15, 0.5);
+
+    group.add(eye1, eye2, pupil1, pupil2);
+
+    // Guarda referencias globales
+    eyes = [eye1, eye2];
+    pupils = [pupil1, pupil2];
+
+    updateEyeDirection(); // Apunta ojos en la dirección actual
+  }
+
+  group.position.set(x, 0.5, z);
+  snakeGroup.add(group);
+  return group;
+}
+
+
+function updateEyeDirection() {
+  if (eyes.length < 2 || pupils.length < 2) return;
+
+  if (direction.x === 1) {
+    eyes[0].position.set(0.4, 0.15, 0.15);
+    eyes[1].position.set(0.4, 0.15, -0.15);
+    pupils[0].position.set(0.5, 0.15, 0.15);
+    pupils[1].position.set(0.5, 0.15, -0.15);
+  } else if (direction.x === -1) {
+    eyes[0].position.set(-0.4, 0.15, 0.15);
+    eyes[1].position.set(-0.4, 0.15, -0.15);
+    pupils[0].position.set(-0.5, 0.15, 0.15);
+    pupils[1].position.set(-0.5, 0.15, -0.15);
+  } else if (direction.z === 1) {
+    eyes[0].position.set(0.15, 0.15, 0.4);
+    eyes[1].position.set(-0.15, 0.15, 0.4);
+    pupils[0].position.set(0.15, 0.15, 0.5);
+    pupils[1].position.set(-0.15, 0.15, 0.5);
+  } else if (direction.z === -1) {
+    eyes[0].position.set(0.15, 0.15, -0.4);
+    eyes[1].position.set(-0.15, 0.15, -0.4);
+    pupils[0].position.set(0.15, 0.15, -0.5);
+    pupils[1].position.set(-0.15, 0.15, -0.5);
+  }
+}
+
+
+
+
+function placeFood() {
+  if (food) scene.remove(food);
+  const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  food = new THREE.Mesh(geometry, material);
+  food.position.set(
+    Math.floor(Math.random() * gridSize),
+    0.5,
+    Math.floor(Math.random() * gridSize)
+  );
+  scene.add(food);
+}
+
+function updateSnake() {
+  const head = { ...snake[0] };
+  head.x += direction.x;
+  head.z += direction.z;
+
+  if (
+    head.x < 0 || head.x >= gridSize ||
+    head.z < 0 || head.z >= gridSize ||
+    snake.some(s => s.x === head.x && s.z === head.z)
+  ) {
+    gameOver = true;
+    running = false;
+    ui.innerText = `¡Perdiste!\nPuntaje: ${score}\nPresiona espacio o toca para reiniciar`;
+    ui.style.display = "flex";
+    return;
+  }
+
+    const mesh = createCube(head.x, head.z, true); // nueva cabeza
+    head.mesh = mesh;
+    snake.unshift(head);
+
+    // cambia la anterior cabeza a cuerpo
+    if (snake.length > 1) {
+    const oldHead = snake[1];
+    snakeGroup.remove(oldHead.mesh);
+    oldHead.mesh = createCube(oldHead.x, oldHead.z, false);
+    snakeGroup.add(oldHead.mesh);
+    }
+
+  if (head.x === food.position.x && head.z === food.position.z) {
+    score++;
+    placeFood();
+  } else {
+    const tail = snake.pop();
+    snakeGroup.remove(tail.mesh);
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+
+  if (running && !gameOver) {
+    moveTimer += dt;
+    if (moveTimer >= moveInterval) {
+      moveTimer = 0;
+      updateSnake();
+    }
+  }
+
+  // Agitar el cuerpo del gusano
+    for (let i = 0; i < snake.length; i++) {
+    const part = snake[i];
+    const wiggle = Math.sin(clock.elapsedTime * 4 + i * 0.5) * 0.1;
+    part.mesh.position.y = 0.5 + wiggle;
+    }
+
+    // Llamar a la función de actualización del fondo
+  updateBackground();
+  renderer.render(scene, camera);
+  document.getElementById('score').innerText = `Puntaje: ${score}`;
+}
+</script>
+</body>
+</html>
