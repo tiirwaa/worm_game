@@ -20,7 +20,7 @@ Un juego clásico de *snake* en 3D usando Three.js, donde controlas un gusano qu
 - Fácil de jugar y visualmente atractivo.
 
 ## 🎮 Jugar Ahora
-https://agsoft.co.cr/juegos/gusano3d/index.html
+https://agsoft.co.cr/juegos/gusano3d/gusano.html
 
 [![Logo de A&G](https://agsoft.co.cr/wp-content/uploads/2023/08/logo.png)](https://agsoft.co.cr)  
 _Creado por **A&G Programación y Desarrollo de Sistemas Informáticos S.A.**_
