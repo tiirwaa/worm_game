@@ -342,6 +342,7 @@ let textureBack = null;
 let snakeGroup;
 let particles = []; // small particle effects when eating
 let beams = []; // laser beams when eating (red/blue rays)
+let borderLines = []; // flashing red border lines
 // Colors from logo reference
 const PALETTE = {
   blue: 0x3A78FF,
@@ -402,6 +403,33 @@ function init() {
   const grid = new THREE.GridHelper(gridSize, gridSize, 0x2f7bff, 0x0a0c12);
   grid.position.set(gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5);
   scene.add(grid);
+
+  // Flashing red border lines to indicate boundaries
+  const borderMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1.0 });
+  // Bottom border: z=0, x=0 to gridSize
+  const bottomPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(gridSize, 0, 0)];
+  const bottomGeometry = new THREE.BufferGeometry().setFromPoints(bottomPoints);
+  const bottomLine = new THREE.Line(bottomGeometry, borderMaterial.clone());
+  scene.add(bottomLine);
+  borderLines.push(bottomLine);
+  // Top border: z=gridSize, x=0 to gridSize
+  const topPoints = [new THREE.Vector3(0, 0, gridSize), new THREE.Vector3(gridSize, 0, gridSize)];
+  const topGeometry = new THREE.BufferGeometry().setFromPoints(topPoints);
+  const topLine = new THREE.Line(topGeometry, borderMaterial.clone());
+  scene.add(topLine);
+  borderLines.push(topLine);
+  // Left border: x=0, z=0 to gridSize
+  const leftPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, gridSize)];
+  const leftGeometry = new THREE.BufferGeometry().setFromPoints(leftPoints);
+  const leftLine = new THREE.Line(leftGeometry, borderMaterial.clone());
+  scene.add(leftLine);
+  borderLines.push(leftLine);
+  // Right border: x=gridSize, z=0 to gridSize
+  const rightPoints = [new THREE.Vector3(gridSize, 0, 0), new THREE.Vector3(gridSize, 0, gridSize)];
+  const rightGeometry = new THREE.BufferGeometry().setFromPoints(rightPoints);
+  const rightLine = new THREE.Line(rightGeometry, borderMaterial.clone());
+  scene.add(rightLine);
+  borderLines.push(rightLine);
 
   // Neon accent lights for atmosphere
   try {
@@ -940,6 +968,11 @@ function animate() {
       }
       beams.splice(i, 1);
     }
+  }
+
+  // Animate border lines flashing like LED lights
+  for (let line of borderLines) {
+    line.material.opacity = 0.3 + 0.7 * Math.sin(clock.elapsedTime * 6);
   }
 
   // Agitar el cuerpo del gusano
