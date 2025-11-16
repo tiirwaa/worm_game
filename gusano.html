@@ -886,11 +886,15 @@ function updateSnake() {
     head.z < 0 || head.z >= gridSize ||
     snake.some(s => s.x === head.x && s.z === head.z)
   ) {
+    // Explode all snake parts
+    for (let part of snake) {
+      spawnParticles(part.mesh.position, PALETTE.red, 15);
+      snakeGroup.remove(part.mesh);
+    }
+    snake = [];
     gameOver = true;
     running = false;
     try { if (typeof soundManager !== 'undefined') soundManager.playGameOver(); } catch (e) {}
-    //ui.innerText = `¡Perdiste!\nPuntaje: ${score}\nPresiona espacio o toca para reiniciar`;
-    //ui.style.display = "flex";
     const overlay = document.getElementById('game-over-overlay');
     document.getElementById('final-score').textContent = score;
     overlay.setAttribute('aria-hidden', 'false');
