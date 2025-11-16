@@ -412,17 +412,17 @@ function init() {
     transparent: true,
     opacity: 0.8
   });
-  // Bottom border: z=-0.5, x=-0.5 to 19.5, cylinder along x
+  // Bottom border: z=0, x=-0.5 to 19.5, cylinder along x
   const bottomGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const bottomRay = new THREE.Mesh(bottomGeometry, rayMaterial.clone());
-  bottomRay.position.set(9.5, 0.5, -0.5); // center at grid position
+  bottomRay.position.set(9.5, 0.5, 0); // moved closer by 0.5
   bottomRay.rotation.z = Math.PI / 2;
   scene.add(bottomRay);
   borderRays.push(bottomRay);
-  // Top border: z=19.5, x=-0.5 to 19.5
+  // Top border: z=19, x=-0.5 to 19.5
   const topGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const topRay = new THREE.Mesh(topGeometry, rayMaterial.clone());
-  topRay.position.set(9.5, 0.5, 19.5);
+  topRay.position.set(9.5, 0.5, 19); // moved closer by 0.5
   topRay.rotation.z = Math.PI / 2;
   scene.add(topRay);
   borderRays.push(topRay);
