@@ -84,10 +84,65 @@
     }
 
 
+    /* Rotate overlay: show on mobile when portrait to ask user to rotate device */
+    #rotate-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.88);
+      color: #fff;
+      z-index: 9999;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 220ms ease, visibility 220ms ease;
+      pointer-events: none;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #rotate-overlay.show {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #rotate-overlay .rotate-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 18px;
+    }
+    #rotate-overlay .rotate-icon {
+      width: 96px;
+      height: 96px;
+      opacity: 0.98;
+    }
+    #rotate-overlay .rotate-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+    @media (max-width:600px) {
+      #rotate-overlay .rotate-icon { width: 72px; height:72px; }
+      #rotate-overlay .rotate-text { font-size: 16px; }
+    }
+
   </style>
 </head>
 <body>
 <div id="ui">Presiona espacio o toca la pantalla para comenzar</div>
+
+<!-- Rotate overlay: shown on mobile when in portrait orientation -->
+<div id="rotate-overlay" class="" role="dialog" aria-hidden="true" tabindex="-1">
+  <div class="rotate-inner" aria-hidden="true">
+    <svg class="rotate-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 2.21-1.45 4.08-3.5 4.72" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 6v6" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+    </svg>
+    <div class="rotate-text">Gira la pantalla</div>
+  </div>
+</div>
 <div id="score">Puntaje: 0</div>
 <img id="logo" src="logo.png" alt="Logo">
 <div id="touch-controls" style="display: none;">
@@ -460,6 +515,32 @@ function animate() {
   renderer.render(scene, camera);
   document.getElementById('score').innerText = `Puntaje: ${score}`;
 }
+</script>
+<script>
+  // Rotate overlay logic: show overlay on mobile when viewport is portrait
+  (function () {
+    const overlay = document.getElementById('rotate-overlay');
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!overlay) return;
+    function updateRotateOverlay() {
+      try {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        if (isMobile && isPortrait) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        } else {
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    window.addEventListener('resize', updateRotateOverlay);
+    window.addEventListener('orientationchange', () => setTimeout(updateRotateOverlay, 200));
+    // run on next tick to ensure sizes settled
+    setTimeout(updateRotateOverlay, 50);
+  })();
 </script>
 </body>
 </html>
