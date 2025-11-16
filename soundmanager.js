@@ -62,7 +62,8 @@ class SoundManager {
     this.ensureContext();
     if (!this.ctx || this.isBackground) return;
     this.bgGain = this.ctx.createGain();
-    this.bgGain.gain.value = 0.05; // lower volume for softer ambience
+    // raise slightly so it's audible but still subtle; user can toggle or change later
+    this.bgGain.gain.value = 0.08; // set to subtle but audible
     this.bgGain.connect(this.master);
 
     // Futuristic ambient pad: 3-layer oscillators with bandpass + slow LFO
@@ -126,6 +127,7 @@ class SoundManager {
     this.bgNodes = [o1, o2, o3, g1, g2, g3, lfo, lfoGain];
     // Ensure reverb is included in background node list for cleanup
     this.isBackground = true;
+    try { console.info('SoundManager.startBackground -> started (isBackground true)'); } catch(e) {}
   }
 
   stopBackground() {
@@ -139,6 +141,7 @@ class SoundManager {
       if (this.reverb && this.reverb.disconnect) try { this.reverb.disconnect(); } catch (e) {}
       if (this.bgGain) { try { this.bgGain.disconnect(); } catch (e) {} }
     } catch (e) {}
+      try { console.info('SoundManager.stopBackground -> stopped'); } catch(e) {}
     this.bgNodes = [];
     this.bgGain = null;
     this._arpTimer = null;
