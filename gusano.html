@@ -342,7 +342,7 @@ let textureBack = null;
 let snakeGroup;
 let particles = []; // small particle effects when eating
 let beams = []; // laser beams when eating (red/blue rays)
-let borderLines = []; // flashing red border lines
+let borderRays = []; // flashing red border rays
 // Colors from logo reference
 const PALETTE = {
   blue: 0x3A78FF,
@@ -404,32 +404,41 @@ function init() {
   grid.position.set(gridSize / 2 - 0.5, -0.5, gridSize / 2 - 0.5);
   scene.add(grid);
 
-  // Flashing red border lines to indicate boundaries
-  const borderMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1.0 });
-  // Bottom border: z=0, x=0 to gridSize
-  const bottomPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(gridSize, 0, 0)];
-  const bottomGeometry = new THREE.BufferGeometry().setFromPoints(bottomPoints);
-  const bottomLine = new THREE.Line(bottomGeometry, borderMaterial.clone());
-  scene.add(bottomLine);
-  borderLines.push(bottomLine);
+  // Flashing red border rays to indicate boundaries
+  const rayMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0xff0000, 
+    emissive: 0xff0000, 
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.8
+  });
+  // Bottom border: z=0, x=0 to gridSize, cylinder along x
+  const bottomGeometry = new THREE.CylinderGeometry(0.05, 0.05, gridSize, 8);
+  const bottomRay = new THREE.Mesh(bottomGeometry, rayMaterial.clone());
+  bottomRay.position.set(gridSize / 2, 1, 0); // y=1 for height
+  bottomRay.rotation.z = Math.PI / 2; // rotate to lie along x
+  scene.add(bottomRay);
+  borderRays.push(bottomRay);
   // Top border: z=gridSize, x=0 to gridSize
-  const topPoints = [new THREE.Vector3(0, 0, gridSize), new THREE.Vector3(gridSize, 0, gridSize)];
-  const topGeometry = new THREE.BufferGeometry().setFromPoints(topPoints);
-  const topLine = new THREE.Line(topGeometry, borderMaterial.clone());
-  scene.add(topLine);
-  borderLines.push(topLine);
-  // Left border: x=0, z=0 to gridSize
-  const leftPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, gridSize)];
-  const leftGeometry = new THREE.BufferGeometry().setFromPoints(leftPoints);
-  const leftLine = new THREE.Line(leftGeometry, borderMaterial.clone());
-  scene.add(leftLine);
-  borderLines.push(leftLine);
+  const topGeometry = new THREE.CylinderGeometry(0.05, 0.05, gridSize, 8);
+  const topRay = new THREE.Mesh(topGeometry, rayMaterial.clone());
+  topRay.position.set(gridSize / 2, 1, gridSize);
+  topRay.rotation.z = Math.PI / 2;
+  scene.add(topRay);
+  borderRays.push(topRay);
+  // Left border: x=0, z=0 to gridSize, cylinder along z
+  const leftGeometry = new THREE.CylinderGeometry(0.05, 0.05, gridSize, 8);
+  const leftRay = new THREE.Mesh(leftGeometry, rayMaterial.clone());
+  leftRay.position.set(0, 1, gridSize / 2);
+  // no rotation needed, default along y
+  scene.add(leftRay);
+  borderRays.push(leftRay);
   // Right border: x=gridSize, z=0 to gridSize
-  const rightPoints = [new THREE.Vector3(gridSize, 0, 0), new THREE.Vector3(gridSize, 0, gridSize)];
-  const rightGeometry = new THREE.BufferGeometry().setFromPoints(rightPoints);
-  const rightLine = new THREE.Line(rightGeometry, borderMaterial.clone());
-  scene.add(rightLine);
-  borderLines.push(rightLine);
+  const rightGeometry = new THREE.CylinderGeometry(0.05, 0.05, gridSize, 8);
+  const rightRay = new THREE.Mesh(rightGeometry, rayMaterial.clone());
+  rightRay.position.set(gridSize, 1, gridSize / 2);
+  scene.add(rightRay);
+  borderRays.push(rightRay);
 
   // Neon accent lights for atmosphere
   try {
@@ -970,9 +979,9 @@ function animate() {
     }
   }
 
-  // Animate border lines flashing like LED lights
-  for (let line of borderLines) {
-    line.material.opacity = 0.3 + 0.7 * Math.sin(clock.elapsedTime * 6);
+  // Animate border rays flashing like LED lights
+  for (let ray of borderRays) {
+    ray.material.emissiveIntensity = 0.2 + 0.8 * Math.sin(clock.elapsedTime * 6);
   }
 
   // Agitar el cuerpo del gusano
