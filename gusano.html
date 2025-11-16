@@ -160,6 +160,39 @@
       border-radius: 8px;
     }
     #audio-toggle:hover { opacity: 0.9; cursor: pointer; }
+    #volume-slider {
+      width: 150px;
+      margin-top: 10px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.1);
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+    }
+    #volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ff7b00;
+      cursor: pointer;
+    }
+    #volume-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ff7b00;
+      cursor: pointer;
+      border: none;
+    }
+    label[for="volume-slider"] {
+      display: block;
+      margin-top: 10px;
+      color: #fff;
+      font-size: 14px;
+    }
     #start-overlay .title { max-width: 150px; height: auto; margin: 0 auto; display: block; }
     #start-overlay .subtitle { margin-top:8px; opacity:0.9; }
     #start-overlay .start-inner button{
@@ -273,6 +306,8 @@
     <div class="subtitle">Presiona 'Comenzar' o toca la pantalla para jugar</div>
     <button id="start-button">Comenzar</button>
     <button id="audio-toggle">Musica: On</button>
+    <label for="volume-slider">Volumen:</label>
+    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
   </div>
 </div>
 <!-- Game Over overlay with same design -->
@@ -447,7 +482,11 @@ function startGame() {
   ui.style.display = "none";
   try { 
     const musicEnabled = (localStorage.getItem('worm_music') || 'true') === 'true';
-    if (musicEnabled && typeof soundManager !== 'undefined') soundManager.startBackground(); 
+    if (musicEnabled && typeof soundManager !== 'undefined') {
+      const savedVolume = parseFloat(localStorage.getItem('worm_volume') || '0.5');
+      soundManager.setMasterVolume(savedVolume);
+      soundManager.startBackground(); 
+    }
   } catch (e) {}
   try {
     const overlay = document.getElementById('start-overlay');
@@ -492,15 +531,18 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
       });
     }
-    // Ensure audio context plays on any user gesture if music enabled
-    try {
-      document.addEventListener('pointerdown', () => {
-        const musicEnabled = (localStorage.getItem('worm_music') || 'true') === 'true';
-        if (musicEnabled && typeof soundManager !== 'undefined') {
-          try { soundManager.ensureContext(); } catch (e) {}
-        }
-      }, { once: true });
-    } catch (e) {}
+    // Volume slider
+    const volumeSlider = document.getElementById('volume-slider');
+    if (volumeSlider) {
+      const savedVolume = parseFloat(localStorage.getItem('worm_volume') || '0.5');
+      volumeSlider.value = savedVolume;
+      soundManager.setMasterVolume(savedVolume);
+      volumeSlider.addEventListener('input', (e) => {
+        const vol = parseFloat(e.target.value);
+        soundManager.setMasterVolume(vol);
+        localStorage.setItem('worm_volume', vol.toString());
+      });
+    }
   } catch (e) {}
 });
 
