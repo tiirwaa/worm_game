@@ -1,13 +1,16 @@
 // Procedural Sound Manager using WebAudio
-// Exposes a simple API: startBackground(), stopBackground(), playMove(), playEat(), playGameOver(), setMasterVolume()
+// Exposes a simple API: startBackground(), stopBackground(), playMove(), playEat(), playGameOver(), setMusicVolume(), setEffectsVolume()
 class SoundManager {
   constructor() {
     this.ctx = null;
     this.master = null;
+    this.musicGain = null;
+    this.effectsGain = null;
     this.bgNodes = [];
     this.bgGain = null;
     this.isBackground = false;
-    this.masterVolume = 0.5;
+    this.musicVolume = 0.5;
+    this.effectsVolume = 0.5;
   }
 
   // small utility to create a reverb buffer with decaying noise
@@ -37,16 +40,29 @@ class SoundManager {
       return;
     }
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.masterVolume;
+    this.master.gain.value = 1.0; // master is always 1, volumes controlled by sub-gains
     this.master.connect(this.ctx.destination);
+
+    this.musicGain = this.ctx.createGain();
+    this.musicGain.gain.value = this.musicVolume;
+    this.musicGain.connect(this.master);
+
+    this.effectsGain = this.ctx.createGain();
+    this.effectsGain.gain.value = this.effectsVolume;
+    this.effectsGain.connect(this.master);
 
     // small global final touch
     this.reverb = null; // placeholder for future
   }
 
-  setMasterVolume(v) {
-    this.masterVolume = v;
-    if (this.master) this.master.gain.value = v;
+  setMusicVolume(v) {
+    this.musicVolume = v;
+    if (this.musicGain) this.musicGain.gain.value = v;
+  }
+
+  setEffectsVolume(v) {
+    this.effectsVolume = v;
+    if (this.effectsGain) this.effectsGain.gain.value = v;
   }
 
   ensureContext() {
@@ -63,7 +79,7 @@ class SoundManager {
     if (!this.ctx || this.isBackground) return;
     this.bgGain = this.ctx.createGain();
     this.bgGain.gain.value = 0.8; // adjusted volume
-    this.bgGain.connect(this.master);
+    this.bgGain.connect(this.musicGain);
 
     // Define a simple arcade melody: notes with frequencies and durations (in seconds)
     this.melody = [
@@ -144,7 +160,7 @@ class SoundManager {
     filter.frequency.value = 800;
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.master);
+    gain.connect(this.effectsGain);
     osc.start();
     osc.stop(this.ctx.currentTime + 0.2);
   }
@@ -167,7 +183,7 @@ class SoundManager {
       gain.gain.setValueAtTime(0.04 / (idx + 1), time);
       gain.gain.exponentialRampToValueAtTime(0.00001, time + 0.25);
       osc.connect(gain);
-      gain.connect(this.master);
+      gain.connect(this.effectsGain);
       osc.start(time);
       osc.stop(time + 0.26);
     });
@@ -182,7 +198,7 @@ class SoundManager {
     const ng = this.ctx.createGain();
     ng.gain.value = 0.02;
     node.connect(ng);
-    ng.connect(this.master);
+    ng.connect(this.effectsGain);
     node.start(this.ctx.currentTime);
   }
 
@@ -201,7 +217,7 @@ class SoundManager {
       gain.gain.setValueAtTime(0.08, t + i * 0.1);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.1 + 0.2);
       osc.connect(gain);
-      gain.connect(this.master);
+      gain.connect(this.effectsGain);
       osc.start(t + i * 0.1);
       osc.stop(t + i * 0.1 + 0.25);
     }
