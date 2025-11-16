@@ -273,6 +273,7 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.js"></script>
+<script src="./soundmanager.js"></script>
 <script>
 let scene, camera, renderer, clock;
 let eyes = [];
@@ -419,6 +420,7 @@ function onKey(e) {
   if (e.key === "ArrowLeft" || e.key === "a") if (direction.x !== 1) direction.set(-1, 0, 0);
   if (e.key === "ArrowRight" || e.key === "d") if (direction.x !== -1) direction.set(1, 0, 0);
   updateEyeDirection();
+  try { if (typeof soundManager !== 'undefined') soundManager.playMove(); } catch (e) {}
 }
 
 function onTouch(e) {
@@ -432,6 +434,7 @@ function startGame() {
   resetGame();
   running = true;
   ui.style.display = "none";
+  try { if (typeof soundManager !== 'undefined') soundManager.startBackground(); } catch (e) {}
   try {
     const overlay = document.getElementById('start-overlay');
     if (overlay) {
@@ -743,6 +746,7 @@ function updateSnake() {
   ) {
     gameOver = true;
     running = false;
+    try { if (typeof soundManager !== 'undefined') soundManager.playGameOver(); } catch (e) {}
     //ui.innerText = `¡Perdiste!\nPuntaje: ${score}\nPresiona espacio o toca para reiniciar`;
     //ui.style.display = "flex";
     const overlay = document.getElementById('game-over-overlay');
@@ -770,6 +774,7 @@ function updateSnake() {
     // Spawn particles and neon laser beams at the food position for feedback before relocating
     spawnParticles(food.position, PALETTE.cyan, 12);
     spawnLaserBeams(food.position, 10);
+    try { if (typeof soundManager !== 'undefined') soundManager.playEat(); } catch (e) {}
     placeFood();
     try {
       const el = document.getElementById('score');
