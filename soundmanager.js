@@ -197,4 +197,6 @@ class SoundManager {
 const soundManager = new SoundManager();
 window.soundManager = soundManager;
 
-export default SoundManager;
+// Note: we intentionally do NOT export as ES module so this file can be included
+// as a classic script in a browser (<script src="./soundmanager.js"></script>).
+// The SoundManager instance is exposed as window.soundManager above.
