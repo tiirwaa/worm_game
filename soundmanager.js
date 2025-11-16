@@ -63,31 +63,21 @@ class SoundManager {
     if (!this.ctx || this.isBackground) return;
     this.bgGain = this.ctx.createGain();
     // raise slightly so it's audible but still subtle; user can toggle or change later
-    this.bgGain.gain.value = 0.08; // set to subtle but audible
+    this.bgGain.gain.value = 0.3; // increased for audibility
     this.bgGain.connect(this.master);
 
-    // Futuristic ambient pad: 3-layer oscillators with bandpass + slow LFO
-    const padFilter = this.ctx.createBiquadFilter();
-    padFilter.type = 'bandpass';
-    padFilter.frequency.value = 300;
-    padFilter.Q.value = 0.9;
-    padFilter.connect(this.bgGain);
-
+    // Futuristic ambient pad: 3-layer oscillators with slow LFO
     const padGain = this.ctx.createGain();
-    padGain.gain.value = 0.22;
-    padGain.connect(padFilter);
+    padGain.gain.value = 0.4; // increased
+    padGain.connect(this.bgGain);
 
-    const o1 = this.ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 55; o1.detune.value = -6;
-    const o2 = this.ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = 110; o2.detune.value = 8;
-    const o3 = this.ctx.createOscillator(); o3.type = 'sine'; o3.frequency.value = 41.2; o3.detune.value = 10;
+    const o1 = this.ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 110; o1.detune.value = -6;
+    const o2 = this.ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = 220; o2.detune.value = 8;
+    const o3 = this.ctx.createOscillator(); o3.type = 'sine'; o3.frequency.value = 82.4; o3.detune.value = 10;
 
-    const g1 = this.ctx.createGain(); g1.gain.value = 0.12; o1.connect(g1); g1.connect(padGain);
-    const g2 = this.ctx.createGain(); g2.gain.value = 0.09; o2.connect(g2); g2.connect(padGain);
-    const g3 = this.ctx.createGain(); g3.gain.value = 0.07; o3.connect(g3); g3.connect(padGain);
-
-    const lfo = this.ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.05; // slow
-    const lfoGain = this.ctx.createGain(); lfoGain.gain.value = 120;
-    lfo.connect(lfoGain); lfoGain.connect(padFilter.frequency);
+    const g1 = this.ctx.createGain(); g1.gain.value = 0.2; o1.connect(g1); g1.connect(padGain);
+    const g2 = this.ctx.createGain(); g2.gain.value = 0.15; o2.connect(g2); g2.connect(padGain);
+    const g3 = this.ctx.createGain(); g3.gain.value = 0.12; o3.connect(g3); g3.connect(padGain);
 
     o1.start(); o2.start(); o3.start(); lfo.start();
 
@@ -101,7 +91,7 @@ class SoundManager {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
       const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0.006, this.ctx.currentTime);
+      g.gain.setValueAtTime(0.02, this.ctx.currentTime); // increased for audibility
       g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
       osc.connect(g);
       g.connect(this.bgGain);
@@ -124,7 +114,7 @@ class SoundManager {
       this.bgNodes.push(this.reverb, send);
     } catch (e) {}
 
-    this.bgNodes = [o1, o2, o3, g1, g2, g3, lfo, lfoGain];
+    this.bgNodes = [o1, o2, o3, g1, g2, g3];
     // Ensure reverb is included in background node list for cleanup
     this.isBackground = true;
     try { console.info('SoundManager.startBackground -> started (isBackground true)'); } catch(e) {}
