@@ -485,10 +485,10 @@ function resetGame() {
 
 
 function createAnimatedBackground() {
-  // Crear un canvas para la textura
+  // Crear un canvas cuadrado para la textura para que el desplazamiento pueda funcionar en ambos ejes
   const canvas = document.createElement('canvas');
-  canvas.width = 300; // Ancho de la textura
-  canvas.height = 2000; // Alto de la textura
+  canvas.width = 1024; // Ancho de la textura (ambos ejes)
+  canvas.height = 1024; // Alto de la textura
   console.log(canvas.width, canvas.height)
 
   const ctx = canvas.getContext('2d');
@@ -499,7 +499,7 @@ function createAnimatedBackground() {
     ctx.fillStyle = '#04060a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const cell = 18; // tamaño de celda
+    const cell = Math.max(12, Math.floor(canvas.width / 24)); // tamaño de celda adaptado al canvas
     for (let y = 0; y < canvas.height; y += cell) {
       for (let x = 0; x < canvas.width; x += cell) {
         // Dark panel
@@ -533,7 +533,8 @@ function createAnimatedBackground() {
   const textureBack = new THREE.CanvasTexture(canvas);
     textureBack.wrapS = THREE.RepeatWrapping;
     textureBack.wrapT = THREE.RepeatWrapping;
-    textureBack.repeat.set(1, 1); // puedes aumentar para ver más repeticiones
+    // Repítelo varias veces para poder moverlo en ambos ejes
+    textureBack.repeat.set(4, 4);
   
   // Crear el material usando la textura generada
   const material = new THREE.MeshStandardMaterial({
@@ -573,8 +574,10 @@ function updateBackground() {
   // (Opcional) animación de textura
   if (plane.material.map) {
     // Scroll the neon map depending on head position for dynamic motion
-    plane.material.map.offset.x = (head.x / gridSize) * 0.1;
-    plane.material.map.offset.y = (head.z / gridSize) * 0.1;
+    // Use modulo to keep offsets in [0,1) so the repeating tile wraps
+    const scrollFactor = 0.25; // increase to see movement
+    plane.material.map.offset.x = ((head.x / gridSize) * scrollFactor) % 1.0;
+    plane.material.map.offset.y = ((head.z / gridSize) * scrollFactor) % 1.0;
     plane.material.map.needsUpdate = true;
   }
 }
