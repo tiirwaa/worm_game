@@ -412,31 +412,30 @@ function init() {
     transparent: true,
     opacity: 0.8
   });
-  // Bottom border: z=0, x=0 to gridSize, cylinder along x
-  const bottomGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
+  // Bottom border: z=-0.5, x=-0.5 to 19.5, cylinder along x
+  const bottomGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const bottomRay = new THREE.Mesh(bottomGeometry, rayMaterial.clone());
-  bottomRay.position.set(gridSize / 2, 0.5, 0); // center at y=0.5 for height from -0.5 to 2.5
-  bottomRay.rotation.z = Math.PI / 2; // rotate to lie along x
+  bottomRay.position.set(9.5, 0.5, -0.5); // center at grid position
+  bottomRay.rotation.z = Math.PI / 2;
   scene.add(bottomRay);
   borderRays.push(bottomRay);
-  // Top border: z=gridSize, x=0 to gridSize
-  const topGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
+  // Top border: z=19.5, x=-0.5 to 19.5
+  const topGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const topRay = new THREE.Mesh(topGeometry, rayMaterial.clone());
-  topRay.position.set(gridSize / 2, 0.5, gridSize);
+  topRay.position.set(9.5, 0.5, 19.5);
   topRay.rotation.z = Math.PI / 2;
   scene.add(topRay);
   borderRays.push(topRay);
-  // Left border: x=0, z=0 to gridSize, cylinder along z
-  const leftGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
+  // Left border: x=-0.5, z=-0.5 to 19.5, cylinder along z
+  const leftGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const leftRay = new THREE.Mesh(leftGeometry, rayMaterial.clone());
-  leftRay.position.set(0, 0.5, gridSize / 2);
-  // no rotation needed, default along y
+  leftRay.position.set(-0.5, 0.5, 9.5);
   scene.add(leftRay);
   borderRays.push(leftRay);
-  // Right border: x=gridSize, z=0 to gridSize
-  const rightGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
+  // Right border: x=19.5, z=-0.5 to 19.5
+  const rightGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const rightRay = new THREE.Mesh(rightGeometry, rayMaterial.clone());
-  rightRay.position.set(gridSize, 0.5, gridSize / 2);
+  rightRay.position.set(19.5, 0.5, 9.5);
   scene.add(rightRay);
   borderRays.push(rightRay);
 
