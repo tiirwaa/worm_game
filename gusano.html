@@ -150,6 +150,16 @@
       color: #fff;
       font-family: 'Segoe UI', Roboto, Arial, sans-serif;
     }
+    #audio-toggle {
+      margin-left: 8px;
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 6px 8px;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+    #audio-toggle:hover { opacity: 0.9; cursor: pointer; }
     #start-overlay .title { max-width: 150px; height: auto; margin: 0 auto; display: block; }
     #start-overlay .subtitle { margin-top:8px; opacity:0.9; }
     #start-overlay .start-inner button{
@@ -262,6 +272,7 @@
     <img src="logoworm3d.png" alt="Gusano 3D" class="title">
     <div class="subtitle">Presiona 'Comenzar' o toca la pantalla para jugar</div>
     <button id="start-button">Comenzar</button>
+    <button id="audio-toggle">Musica: On</button>
   </div>
 </div>
 <!-- Game Over overlay with same design -->
@@ -434,7 +445,10 @@ function startGame() {
   resetGame();
   running = true;
   ui.style.display = "none";
-  try { if (typeof soundManager !== 'undefined') soundManager.startBackground(); } catch (e) {}
+  try { 
+    const musicEnabled = (localStorage.getItem('worm_music') || 'true') === 'true';
+    if (musicEnabled && typeof soundManager !== 'undefined') soundManager.startBackground(); 
+  } catch (e) {}
   try {
     const overlay = document.getElementById('start-overlay');
     if (overlay) {
@@ -456,6 +470,28 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btn) btn.addEventListener('click', startGame);
     const restartBtn = document.getElementById('restart-button');
     if (restartBtn) restartBtn.addEventListener('click', resetGame);
+    // Audio toggle
+    let musicEnabled = (localStorage.getItem('worm_music') || 'true') === 'true';
+    const audioBtn = document.getElementById('audio-toggle');
+    function updateAudioButton() {
+      if (!audioBtn) return;
+      audioBtn.textContent = 'Musica: ' + (musicEnabled ? 'On' : 'Off');
+    }
+    updateAudioButton();
+    if (audioBtn) {
+      audioBtn.addEventListener('click', () => {
+        musicEnabled = !musicEnabled;
+        localStorage.setItem('worm_music', musicEnabled ? 'true' : 'false');
+        updateAudioButton();
+        try {
+          if (musicEnabled) {
+            if (typeof soundManager !== 'undefined') soundManager.startBackground();
+          } else {
+            if (typeof soundManager !== 'undefined') soundManager.stopBackground();
+          }
+        } catch (e) {}
+      });
+    }
   } catch (e) {}
 });
 
