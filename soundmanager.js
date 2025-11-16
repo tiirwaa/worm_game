@@ -57,54 +57,65 @@ class SoundManager {
     }
   }
 
-  // Background ambient music: combination of low pad + simple arpeggio
+  // Background arcade-style looping melody
   startBackground() {
     this.ensureContext();
     if (!this.ctx || this.isBackground) return;
     this.bgGain = this.ctx.createGain();
-    // raise slightly so it's audible but still subtle; user can toggle or change later
-    this.bgGain.gain.value = 1.0; // increased for audibility
+    this.bgGain.gain.value = 0.8; // adjusted volume
     this.bgGain.connect(this.master);
 
-    // Futuristic ambient pad: 3-layer oscillators with modulated lowpass filter
-    const padFilter = this.ctx.createBiquadFilter();
-    padFilter.type = 'lowpass';
-    padFilter.frequency.value = 600;
-    padFilter.Q.value = 1.0;
-    padFilter.connect(this.bgGain);
+    // Define a simple arcade melody: notes with frequencies and durations (in seconds)
+    this.melody = [
+      { freq: 261.63, dur: 0.3 }, // C4
+      { freq: 329.63, dur: 0.3 }, // E4
+      { freq: 392.00, dur: 0.3 }, // G4
+      { freq: 523.25, dur: 0.6 }, // C5
+      { freq: 392.00, dur: 0.3 }, // G4
+      { freq: 329.63, dur: 0.3 }, // E4
+      { freq: 261.63, dur: 0.6 }, // C4
+      { freq: 220.00, dur: 0.3 }, // A3
+      { freq: 261.63, dur: 0.3 }, // C4
+      { freq: 293.66, dur: 0.3 }, // D4
+      { freq: 329.63, dur: 0.6 }, // E4
+      { freq: 293.66, dur: 0.3 }, // D4
+      { freq: 261.63, dur: 0.3 }, // C4
+      { freq: 220.00, dur: 0.6 }, // A3
+    ];
+    this.melodyIndex = 0;
+    this.melodyStartTime = this.ctx.currentTime;
 
-    // LFO for filter modulation
-    const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 0.1; // slow modulation
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 200; // modulate frequency by +/- 200 Hz
-    lfo.connect(lfoGain);
-    lfoGain.connect(padFilter.frequency);
+    // Function to play the next note in the melody
+    const playNextNote = () => {
+      if (!this.isBackground) return;
+      const note = this.melody[this.melodyIndex];
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square'; // arcade sound
+      osc.frequency.value = note.freq;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + note.dur);
+      osc.connect(gain);
+      gain.connect(this.bgGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + note.dur);
+      this.melodyIndex = (this.melodyIndex + 1) % this.melody.length;
+    };
 
-    const padGain = this.ctx.createGain();
-    padGain.gain.value = 0.3; // adjusted
-    padGain.connect(padFilter);
+    // Play notes at appropriate times
+    this._melodyTimer = setInterval(() => {
+      playNextNote();
+    }, 300); // play a note every 300ms
 
-    const o1 = this.ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 200; o1.detune.value = -10;
-    const o2 = this.ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 400; o2.detune.value = 15;
-    const o3 = this.ctx.createOscillator(); o3.type = 'sawtooth'; o3.frequency.value = 600; o3.detune.value = 5;
-
-    const g1 = this.ctx.createGain(); g1.gain.value = 0.25; o1.connect(g1); g1.connect(padGain);
-    const g2 = this.ctx.createGain(); g2.gain.value = 0.2; o2.connect(g2); g2.connect(padGain);
-    const g3 = this.ctx.createGain(); g3.gain.value = 0.15; o3.connect(g3); g3.connect(padGain);
-
-    o1.start(); o2.start(); o3.start(); lfo.start();
-
-    this.bgNodes = [o1, o2, o3, g1, g2, g3, padFilter, lfo, lfoGain];
-    // Ensure reverb is included in background node list for cleanup
+    this.bgNodes = [this.bgGain]; // minimal nodes
     this.isBackground = true;
-    try { console.info('SoundManager.startBackground -> started (isBackground true)'); } catch(e) {}
+    try { console.info('SoundManager.startBackground -> started arcade melody'); } catch(e) {}
   }
 
   stopBackground() {
     if (!this.ctx || !this.isBackground) return;
     try {
+      clearInterval(this._melodyTimer);
       this.bgNodes.forEach(n => {
         try { if (n.stop) n.stop(); } catch (e) {}
         try { if (n.disconnect) n.disconnect(); } catch (e) {}
@@ -114,6 +125,7 @@ class SoundManager {
       try { console.info('SoundManager.stopBackground -> stopped'); } catch(e) {}
     this.bgNodes = [];
     this.bgGain = null;
+    this._melodyTimer = null;
     this.isBackground = false;
   }
 
