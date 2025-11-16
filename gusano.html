@@ -426,16 +426,18 @@ function init() {
   topRay.rotation.z = Math.PI / 2;
   scene.add(topRay);
   borderRays.push(topRay);
-  // Left border: x=0, z=-0.5 to 19.5, cylinder along z
+  // Left border: x=-0.5, z=-0.5 to 19.5, cylinder along z
   const leftGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const leftRay = new THREE.Mesh(leftGeometry, rayMaterial.clone());
-  leftRay.position.set(0, 0.5, 9.5); // moved closer by 0.5
+  leftRay.position.set(-0.5, 0.5, 9.5);
+  leftRay.rotation.x = Math.PI / 2; // rotate to lie along z
   scene.add(leftRay);
   borderRays.push(leftRay);
-  // Right border: x=19, z=-0.5 to 19.5
+  // Right border: x=19.5, z=-0.5 to 19.5
   const rightGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const rightRay = new THREE.Mesh(rightGeometry, rayMaterial.clone());
-  rightRay.position.set(19, 0.5, 9.5); // moved closer by 0.5
+  rightRay.position.set(19.5, 0.5, 9.5);
+  rightRay.rotation.x = Math.PI / 2; // rotate to lie along z
   scene.add(rightRay);
   borderRays.push(rightRay);
 
