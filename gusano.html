@@ -429,12 +429,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btn) btn.addEventListener('click', startGame);
     const restartBtn = document.getElementById('restart-button');
     if (restartBtn) restartBtn.addEventListener('click', resetGame);
-    // hide overlay initially only on desktop
-    const overlay = document.getElementById('start-overlay');
-    if (overlay && window.innerWidth > 1000) {
-      if (overlay.contains(document.activeElement)) document.activeElement.blur();
-      overlay.setAttribute('aria-hidden', 'true');
-    }
   } catch (e) {}
 });
 
