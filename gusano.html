@@ -350,21 +350,25 @@ function init() {
     document.getElementById('touch-controls').style.display = 'block';
 
     //
-    document.querySelector('#touch-controls .up').addEventListener('click', () => {
-    if (direction.z !== 1) direction.set(0, 0, -1);
-    updateEyeDirection();
+    document.querySelector('#touch-controls .up').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (direction.z !== 1) direction.set(0, 0, -1);
+      updateEyeDirection();
     });
-    document.querySelector('#touch-controls .down').addEventListener('click', () => {
-    if (direction.z !== -1) direction.set(0, 0, 1);
-    updateEyeDirection();
+    document.querySelector('#touch-controls .down').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (direction.z !== -1) direction.set(0, 0, 1);
+      updateEyeDirection();
     });
-    document.querySelector('#touch-controls .left').addEventListener('click', () => {
-    if (direction.x !== 1) direction.set(-1, 0, 0);
-    updateEyeDirection();
+    document.querySelector('#touch-controls .left').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (direction.x !== 1) direction.set(-1, 0, 0);
+      updateEyeDirection();
     });
-    document.querySelector('#touch-controls .right').addEventListener('click', () => {
-    if (direction.x !== -1) direction.set(1, 0, 0);
-    updateEyeDirection();
+    document.querySelector('#touch-controls .right').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (direction.x !== -1) direction.set(1, 0, 0);
+      updateEyeDirection();
     });
   }
 
