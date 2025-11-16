@@ -412,10 +412,10 @@ function init() {
     transparent: true,
     opacity: 0.8
   });
-  // Bottom border: z=0, x=-0.5 to 19.5, cylinder along x
+  // Bottom border: z=-1, x=-0.5 to 19.5, cylinder along x
   const bottomGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
   const bottomRay = new THREE.Mesh(bottomGeometry, rayMaterial.clone());
-  bottomRay.position.set(9.5, 0.5, 0); // moved closer by 0.5
+  bottomRay.position.set(9.5, 0.5, -1); // moved down by 1 unit
   bottomRay.rotation.z = Math.PI / 2;
   scene.add(bottomRay);
   borderRays.push(bottomRay);
