@@ -10,6 +10,24 @@ class SoundManager {
     this.masterVolume = 0.5;
   }
 
+  // small utility to create a reverb buffer with decaying noise
+  _createReverbBuffer(duration = 2.0, decay = 2.0) {
+    try {
+      const rate = this.ctx.sampleRate;
+      const length = rate * duration;
+      const buffer = this.ctx.createBuffer(2, length, rate);
+      for (let c = 0; c < 2; c++) {
+        const data = buffer.getChannelData(c);
+        for (let i = 0; i < length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        }
+      }
+      return buffer;
+    } catch (e) {
+      return null;
+    }
+  }
+
   init() {
     if (this.ctx) return;
     try {
@@ -44,15 +62,16 @@ class SoundManager {
     this.ensureContext();
     if (!this.ctx || this.isBackground) return;
     this.bgGain = this.ctx.createGain();
-    this.bgGain.gain.value = 0.08; // low volume
+    this.bgGain.gain.value = 0.05; // lower volume for softer ambience
     this.bgGain.connect(this.master);
 
     // Low pad (two detuned oscillators)
     const o1 = this.ctx.createOscillator();
-    o1.type = 'sine';
+    // smoother pad
+    o1.type = 'triangle';
     o1.frequency.value = 55; // low A
     const g1 = this.ctx.createGain();
-    g1.gain.value = 0.6;
+    g1.gain.value = 0.18;
     const f1 = this.ctx.createBiquadFilter();
     f1.type = 'lowpass';
     f1.frequency.value = 500;
@@ -62,10 +81,10 @@ class SoundManager {
     o1.start();
 
     const o2 = this.ctx.createOscillator();
-    o2.type = 'sine';
+    o2.type = 'triangle';
     o2.frequency.value = 68.7; // slightly detuned
     const g2 = this.ctx.createGain();
-    g2.gain.value = 0.4;
+    g2.gain.value = 0.16;
     const f2 = this.ctx.createBiquadFilter();
     f2.type = 'lowpass';
     f2.frequency.value = 800;
@@ -81,20 +100,35 @@ class SoundManager {
       if (!this.bgGain) return;
       const freq = this.arpNotes[this.arpIndex % this.arpNotes.length];
       const osc = this.ctx.createOscillator();
-      osc.type = 'sawtooth';
+      osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
       const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0.02, this.ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.6);
+      g.gain.setValueAtTime(0.008, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.36);
       osc.connect(g);
       g.connect(this.bgGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.6);
       this.arpIndex++;
     };
-    this._arpTimer = setInterval(playArp, 800);
+    this._arpTimer = setInterval(playArp, 600);
+
+    // Add a light reverb to the whole background for warmth
+    try {
+      this.reverb = this.ctx.createConvolver();
+      this.reverb.buffer = this._createReverbBuffer(2.2, 2.0);
+      const send = this.ctx.createGain();
+      send.gain.value = 0.035;
+      // Send some pad signal to the reverb using a small splitter
+      f1.connect(send);
+      f2.connect(send);
+      send.connect(this.reverb);
+      this.reverb.connect(this.bgGain);
+      this.bgNodes.push(this.reverb, send);
+    } catch (e) {}
 
     this.bgNodes = [o1, o2, g1, g2];
+    // Ensure reverb is included in background node list for cleanup
     this.isBackground = true;
   }
 
@@ -106,6 +140,7 @@ class SoundManager {
         if (n.stop) n.stop();
         if (n.disconnect) try { n.disconnect(); } catch (e) {}
       });
+      if (this.reverb && this.reverb.disconnect) this.reverb.disconnect();
       if (this.bgGain) { this.bgGain.disconnect(); }
     } catch (e) {}
     this.bgNodes = [];
