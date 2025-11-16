@@ -492,6 +492,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
       });
     }
+    // Ensure audio context plays on any user gesture if music enabled
+    try {
+      document.addEventListener('pointerdown', () => {
+        const musicEnabled = (localStorage.getItem('worm_music') || 'true') === 'true';
+        if (musicEnabled && typeof soundManager !== 'undefined') {
+          try { soundManager.ensureContext(); } catch (e) {}
+        }
+      }, { once: true });
+    } catch (e) {}
   } catch (e) {}
 });
 
