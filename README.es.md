@@ -3,6 +3,7 @@
 Un emocionante juego de *snake* en 3D desarrollado con Three.js, donde controlas un gusano futurista que se mueve por un plano tridimensional. Come la comida para crecer, evita chocarte contra ti mismo o los límites marcados por rayos láser rojos, y disfruta de efectos visuales y sonoros inmersivos en esta experiencia 3D.
 
 ![Imagen del juego Gusano 3D](./logoworm3d.png)
+![Worm 3D Game Image](./gusano3d.png)
 
 ## 🎮 Cómo jugar
 

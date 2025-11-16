@@ -5,6 +5,7 @@ Read this in [Spanish](./README.es.md)
 An exciting 3D *snake* game developed with Three.js, where you control a futuristic worm moving through a three-dimensional plane. Eat food to grow, avoid colliding with yourself or the boundaries marked by red laser rays, and enjoy immersive visual and sound effects in this 3D experience.
 
 ![Worm 3D Game Image](./logoworm3d.png)
+![Worm 3D Game Image](./gusano3d.png)
 
 ## 🎮 How to Play
 
