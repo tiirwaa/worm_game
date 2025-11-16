@@ -79,7 +79,7 @@ class SoundManager {
     const g2 = this.ctx.createGain(); g2.gain.value = 0.15; o2.connect(g2); g2.connect(padGain);
     const g3 = this.ctx.createGain(); g3.gain.value = 0.12; o3.connect(g3); g3.connect(padGain);
 
-    o1.start(); o2.start(); o3.start(); lfo.start();
+    o1.start(); o2.start(); o3.start();
 
     // Arpeggio using scheduled oscillator notes (uses setInterval)
     this.arpIndex = 0;
