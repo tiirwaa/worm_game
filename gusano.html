@@ -81,20 +81,20 @@
     transform: translateX(-50%);
     top: 0;
     margin: 0px !important;
-    margin-top: 5px !important;
+    margin-top: 3px !important;
     }
 
     #touch-controls .row {
     display: flex;
     justify-content: center;
-    margin-top: 60px; /* Ajusta este valor si es necesario */
+    margin-top: 45px; /* Ajusta este valor si es necesario */
     }
 
     #touch-controls .btn {
-    width: 56px;
-    height: 56px;
-    margin: 5px;
-    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    margin: 4px;
+    font-size: 22px;
     background-color: rgba(255,255,255,0.2);
     border: 1px solid #fff;
     color: white;
@@ -393,7 +393,8 @@ function onKey(e) {
   updateEyeDirection();
 }
 
-function onTouch() {
+function onTouch(e) {
+  if (e.target.tagName === 'BUTTON') return; // don't start game on button click
   if (!running || gameOver) {
     startGame();
   }
