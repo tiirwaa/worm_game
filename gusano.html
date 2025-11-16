@@ -406,9 +406,15 @@ function startGame() {
   ui.style.display = "none";
   try {
     const overlay = document.getElementById('start-overlay');
-    if (overlay) overlay.setAttribute('aria-hidden', 'true');
+    if (overlay) {
+      if (overlay.contains(document.activeElement)) document.activeElement.blur();
+      overlay.setAttribute('aria-hidden', 'true');
+    }
     const goOverlay = document.getElementById('game-over-overlay');
-    if (goOverlay) goOverlay.setAttribute('aria-hidden', 'true');
+    if (goOverlay) {
+      if (goOverlay.contains(document.activeElement)) document.activeElement.blur();
+      goOverlay.setAttribute('aria-hidden', 'true');
+    }
   } catch (e) {}
 }
 
@@ -421,7 +427,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (restartBtn) restartBtn.addEventListener('click', resetGame);
     // hide overlay initially only on desktop
     const overlay = document.getElementById('start-overlay');
-    if (overlay && window.innerWidth > 1000) overlay.setAttribute('aria-hidden', 'true');
+    if (overlay && window.innerWidth > 1000) {
+      if (overlay.contains(document.activeElement)) document.activeElement.blur();
+      overlay.setAttribute('aria-hidden', 'true');
+    }
   } catch (e) {}
 });
 
@@ -439,7 +448,10 @@ function resetGame() {
   ui.style.display = "flex";
   try {
     const goOverlay = document.getElementById('game-over-overlay');
-    if (goOverlay) goOverlay.setAttribute('aria-hidden', 'true');
+    if (goOverlay) {
+      if (goOverlay.contains(document.activeElement)) document.activeElement.blur();
+      goOverlay.setAttribute('aria-hidden', 'true');
+    }
     const startOverlay = document.getElementById('start-overlay');
     if (startOverlay) startOverlay.setAttribute('aria-hidden', 'false');
   } catch (e) {}
