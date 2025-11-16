@@ -66,48 +66,37 @@ class SoundManager {
     this.bgGain.gain.value = 1.0; // increased for audibility
     this.bgGain.connect(this.master);
 
-    // Futuristic ambient pad: 3-layer oscillators with lowpass filter
+    // Futuristic ambient pad: 3-layer oscillators with modulated lowpass filter
     const padFilter = this.ctx.createBiquadFilter();
     padFilter.type = 'lowpass';
-    padFilter.frequency.value = 800;
-    padFilter.Q.value = 0.7;
+    padFilter.frequency.value = 600;
+    padFilter.Q.value = 1.0;
     padFilter.connect(this.bgGain);
 
+    // LFO for filter modulation
+    const lfo = this.ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.1; // slow modulation
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.value = 200; // modulate frequency by +/- 200 Hz
+    lfo.connect(lfoGain);
+    lfoGain.connect(padFilter.frequency);
+
     const padGain = this.ctx.createGain();
-    padGain.gain.value = 0.4; // increased
+    padGain.gain.value = 0.3; // adjusted
     padGain.connect(padFilter);
 
-    const o1 = this.ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 220; o1.detune.value = -6;
-    const o2 = this.ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 440; o2.detune.value = 8;
-    const o3 = this.ctx.createOscillator(); o3.type = 'sawtooth'; o3.frequency.value = 330; o3.detune.value = 10;
+    const o1 = this.ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 200; o1.detune.value = -10;
+    const o2 = this.ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 400; o2.detune.value = 15;
+    const o3 = this.ctx.createOscillator(); o3.type = 'sawtooth'; o3.frequency.value = 600; o3.detune.value = 5;
 
-    const g1 = this.ctx.createGain(); g1.gain.value = 0.3; o1.connect(g1); g1.connect(padGain);
-    const g2 = this.ctx.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(padGain);
-    const g3 = this.ctx.createGain(); g3.gain.value = 0.2; o3.connect(g3); g3.connect(padGain);
+    const g1 = this.ctx.createGain(); g1.gain.value = 0.25; o1.connect(g1); g1.connect(padGain);
+    const g2 = this.ctx.createGain(); g2.gain.value = 0.2; o2.connect(g2); g2.connect(padGain);
+    const g3 = this.ctx.createGain(); g3.gain.value = 0.15; o3.connect(g3); g3.connect(padGain);
 
-    o1.start(); o2.start(); o3.start();
+    o1.start(); o2.start(); o3.start(); lfo.start();
 
-    // Arpeggio using scheduled oscillator notes (uses setInterval)
-    this.arpIndex = 0;
-    this.arpNotes = [220, 277.18, 329.63, 415.30]; // A, C#, E, G# for a more futuristic feel
-    const playArp = () => {
-      if (!this.bgGain) return;
-      const freq = this.arpNotes[this.arpIndex % this.arpNotes.length];
-      const osc = this.ctx.createOscillator();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-      const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0.03, this.ctx.currentTime); // softer
-      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.5);
-      osc.connect(g);
-      g.connect(this.bgGain);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.8);
-      this.arpIndex++;
-    };
-    this._arpTimer = setInterval(playArp, 2500);
-
-    this.bgNodes = [o1, o2, o3, g1, g2, g3, padFilter];
+    this.bgNodes = [o1, o2, o3, g1, g2, g3, padFilter, lfo, lfoGain];
     // Ensure reverb is included in background node list for cleanup
     this.isBackground = true;
     try { console.info('SoundManager.startBackground -> started (isBackground true)'); } catch(e) {}
@@ -116,7 +105,6 @@ class SoundManager {
   stopBackground() {
     if (!this.ctx || !this.isBackground) return;
     try {
-      clearInterval(this._arpTimer);
       this.bgNodes.forEach(n => {
         try { if (n.stop) n.stop(); } catch (e) {}
         try { if (n.disconnect) n.disconnect(); } catch (e) {}
@@ -126,7 +114,6 @@ class SoundManager {
       try { console.info('SoundManager.stopBackground -> stopped'); } catch(e) {}
     this.bgNodes = [];
     this.bgGain = null;
-    this._arpTimer = null;
     this.isBackground = false;
   }
 
