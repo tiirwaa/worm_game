@@ -895,9 +895,11 @@ function updateSnake() {
     gameOver = true;
     running = false;
     try { if (typeof soundManager !== 'undefined') soundManager.playGameOver(); } catch (e) {}
-    const overlay = document.getElementById('game-over-overlay');
-    document.getElementById('final-score').textContent = score;
-    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(() => {
+      const overlay = document.getElementById('game-over-overlay');
+      document.getElementById('final-score').textContent = score;
+      overlay.setAttribute('aria-hidden', 'false');
+    }, 1000);
     return;
   }
 
