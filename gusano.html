@@ -531,7 +531,7 @@ function onKey(e) {
 }
 
 function onTouch(e) {
-  if (e.target.tagName === 'BUTTON') return; // don't start game on button click
+  if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; // don't start game on button or input click
   if (!running || gameOver) {
     startGame();
   }
