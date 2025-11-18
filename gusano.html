@@ -115,6 +115,31 @@
     background-color: rgba(255,255,255,0.4);
     }
 
+    #fullscreen-toggle {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1050;
+    -webkit-user-select: none;
+    user-select: none;
+    width: 48px;
+    height: 48px;
+    margin: 4px;
+    font-size: 22px;
+    background-color: rgba(255,255,255,0.2);
+    border: 1px solid #fff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+    -webkit-backdrop-filter: blur(4px) saturate(120%);
+    backdrop-filter: blur(4px) saturate(120%);
+    }
+
+    #fullscreen-toggle:active {
+    background-color: rgba(255,255,255,0.4);
+    }
+
     /* Start overlay */
     #start-overlay {
       position: fixed;
@@ -305,6 +330,7 @@
 </div>
 <div id="score">Puntaje: 0</div>
 <img id="logo" src="logo.png" alt="Logo">
+<button id="fullscreen-toggle" class="btn">⛶</button>
 <div id="touch-controls">
   <button class="btn up">▲</button>
   <div class="row">
@@ -615,6 +641,32 @@ document.addEventListener('DOMContentLoaded', function () {
         const vol = parseFloat(e.target.value);
         soundManager.setEffectsVolume(vol);
         localStorage.setItem('worm_effects_volume', vol.toString());
+      });
+    }
+    // Fullscreen toggle
+    const fullscreenBtn = document.getElementById('fullscreen-toggle');
+    function updateFullscreenButton() {
+      if (fullscreenBtn) {
+        fullscreenBtn.textContent = document.fullscreenElement ? '⊡' : '⛶';
+      }
+    }
+    updateFullscreenButton();
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().then(() => {
+            if (screen.orientation && screen.orientation.lock) {
+              screen.orientation.lock('landscape').catch(err => {
+                //console.log(`Error locking orientation: ${err.message}`);
+              });
+            }
+          }).catch(err => {
+            console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+          });
+        } else {
+          document.exitFullscreen();
+        }
       });
     }
   } catch (e) {}
