@@ -370,6 +370,18 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.js"></script>
 <script src="./soundmanager.js"></script>
 <script>
+// Colors from logo reference
+const PALETTE = {
+  blue: 0x3A78FF,
+  orange: 0xFF6A00,
+  cyan: 0x56FFD8,
+  red: 0xFF2E2E
+};
+const BORDER_RAY_RADIUS = 0.05;
+const INITIAL_MOVE_INTERVAL = 0.25;
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const ui = document.getElementById('ui');
+
 let scene, camera, renderer, clock;
 let eyes = [];
 let pupils = [];
@@ -379,7 +391,7 @@ let food;
 let running = false;
 let gameOver = false;
 let moveTimer = 0;
-let moveInterval = 0.15;
+let moveInterval = INITIAL_MOVE_INTERVAL;
 let score = 0;
 let gridSize = 20;
 let plane = null;
@@ -388,15 +400,6 @@ let snakeGroup;
 let particles = []; // small particle effects when eating
 let beams = []; // laser beams when eating (red/blue rays)
 let borderRays = []; // flashing red border rays
-// Colors from logo reference
-const PALETTE = {
-  blue: 0x3A78FF,
-  orange: 0xFF6A00,
-  cyan: 0x56FFD8,
-  red: 0xFF2E2E
-};
-const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-const ui = document.getElementById('ui');
 
 init();
 createAnimatedBackground();
@@ -458,28 +461,28 @@ function init() {
     opacity: 0.8
   });
   // Bottom border: z=-1, x=-0.5 to 19.5, cylinder along x
-  const bottomGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
+  const bottomGeometry = new THREE.CylinderGeometry(BORDER_RAY_RADIUS, BORDER_RAY_RADIUS, 20, 8);
   const bottomRay = new THREE.Mesh(bottomGeometry, rayMaterial.clone());
   bottomRay.position.set(9.5, 0.5, -0.5); // moved down by 1 unit
   bottomRay.rotation.z = Math.PI / 2;
   scene.add(bottomRay);
   borderRays.push(bottomRay);
   // Top border: z=19, x=-0.5 to 19.5
-  const topGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
+  const topGeometry = new THREE.CylinderGeometry(BORDER_RAY_RADIUS, BORDER_RAY_RADIUS, 20, 8);
   const topRay = new THREE.Mesh(topGeometry, rayMaterial.clone());
   topRay.position.set(9.5, 0.5, 19.5); // moved closer by 0.5
   topRay.rotation.z = Math.PI / 2;
   scene.add(topRay);
   borderRays.push(topRay);
   // Left border: x=-0.5, z=-0.5 to 19.5, cylinder along z
-  const leftGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
+  const leftGeometry = new THREE.CylinderGeometry(BORDER_RAY_RADIUS, BORDER_RAY_RADIUS, 20, 8);
   const leftRay = new THREE.Mesh(leftGeometry, rayMaterial.clone());
   leftRay.position.set(-0.5, 0.5, 9.5);
   leftRay.rotation.x = Math.PI / 2; // rotate to lie along z
   scene.add(leftRay);
   borderRays.push(leftRay);
   // Right border: x=19.5, z=-0.5 to 19.5
-  const rightGeometry = new THREE.CylinderGeometry(0.02, 0.02, 20, 8);
+  const rightGeometry = new THREE.CylinderGeometry(BORDER_RAY_RADIUS, BORDER_RAY_RADIUS, 20, 8);
   const rightRay = new THREE.Mesh(rightGeometry, rayMaterial.clone());
   rightRay.position.set(19.5, 0.5, 9.5);
   rightRay.rotation.x = Math.PI / 2; // rotate to lie along z
@@ -679,6 +682,7 @@ function resetGame() {
   // Start with a neon head color inspired by logo
   snake.push({ x: 10, z: 10, mesh: createCube(10, 10, true, PALETTE.cyan) });
   moveTimer = 0;
+  moveInterval = INITIAL_MOVE_INTERVAL;
   gameOver = false;
   running = false;
   score = 0;
@@ -990,6 +994,10 @@ function updateSnake() {
 
   if (head.x === food.position.x && head.z === food.position.z) {
     score++;
+    // Increase speed every 5 points
+    if (score % 5 === 0) {
+      moveInterval = Math.max(0.05, moveInterval - 0.01);
+    }
     // Spawn particles and neon laser beams at the food position for feedback before relocating
     spawnParticles(food.position, PALETTE.cyan, 12);
     spawnLaserBeams(food.position, 10);
